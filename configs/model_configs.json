@@ -1,0 +1,15 @@
+[
+    {
+        "model_type": "openai_chat",
+        "config_name": "kimi",
+        "model_name": "moonshot-v1-8k",
+        "api_key": "change-to-your-api-key",
+        "organization": "test",
+        "client_args": {
+            "base_url": "https://api.moonshot.cn/v1"
+        },
+        "generate_args": {
+            "temperature": 0.1
+        }
+    }
+]
