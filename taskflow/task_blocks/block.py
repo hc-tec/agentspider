@@ -1,6 +1,8 @@
 import logging
 from abc import abstractmethod, ABC
 from typing import Any, Dict, List, Optional
+import keyboard
+import time
 
 from selenium.webdriver.remote.webelement import WebElement
 
@@ -89,6 +91,8 @@ class Block(BlockBase):
         self.next_block: Optional[BlockBase] = None
         self.outer: Optional[BlockBase] = None
         self.execute_result: Any = None
+        self.breakpoint = False  # 是否在此块设置断点
+        self.wait_time = 0  # 执行前等待时间（秒）
 
     @property
     def browser(self) -> BrowserAutomation:
@@ -96,6 +100,16 @@ class Block(BlockBase):
 
     def run(self, params: BlockExecuteParams):
         logging.info("Run block: {}, params: {}".format(self.name, params))
+        
+        # 执行前等待
+        if self.context.is_debug_mode():
+            if self.wait_time > 0 and not self.breakpoint:
+                logging.info(f"等待 {self.wait_time} 秒后继续执行...")
+                time.sleep(self.wait_time)
+            if self.breakpoint:
+                logging.info(f"遇到断点: {self.name}，按F9继续...")
+                self.wait_for_continue()
+            
         self.before_execute(params)
         self.execute_result = self.execute(params)
         params.exec_result = self.execute_result
@@ -103,6 +117,16 @@ class Block(BlockBase):
 
         if self.next_block:
             self.next_block.run(params)
+            
+    def wait_for_continue(self):
+        """等待用户按下F9键继续执行"""
+        keyboard.wait('f9')
+        logging.info("继续执行...")
+        
+    def set_breakpoint(self, breakpoint: bool):
+        """设置或取消断点"""
+        self.breakpoint = breakpoint
+        return self
 
     def execute(self, params: BlockExecuteParams) -> any:
         return NotImplementedError(

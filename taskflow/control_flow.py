@@ -24,6 +24,11 @@ class ControlFlow:
     def get_field_saver(self) -> FieldSaver:
         return self.field_saver
 
+    def enable_debug_mode(self, enable: bool = True):
+        """启用或禁用调试模式"""
+        self.block_context.set_debug_mode(enable)
+        return self
+
     def run(self):
         params = BlockExecuteParams()
         self.start_block.run(params)

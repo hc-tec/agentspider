@@ -13,13 +13,16 @@ class JsonFlowParser:
     def __init__(self, json_file_path: str):
         self.json_file_path = json_file_path
 
-    def parse(self) -> ControlFlow:
+    def parse(self, debug_mode: bool = False) -> ControlFlow:
         data_exporter = ExcelExporter(name='data.xlsx')
         field_saver = FieldSaver()
         field_saver.set_data_exporter(data_exporter)
 
         control_flow = ControlFlow()
         control_flow.set_field_saver(field_saver)
+        if debug_mode:
+            control_flow.enable_debug_mode(True)
+        
         block_factory = BlockFactory(control_flow.get_context())
 
         with open(self.json_file_path, "r", encoding="utf-8") as f:
@@ -39,6 +42,13 @@ class JsonFlowParser:
             block_name = json_config["block"]
             block = block_factory.create_block(block_name, json_config)
             block.load_from_config(control_flow, json_config)
+            
+            if json_config.get("breakpoint", False):
+                block.set_breakpoint(True)
+
+            if "wait_time" in json_config:
+                wait_time = float(json_config["wait_time"])
+                block.set_wait_time(wait_time)
 
             if block_name == "StartBlock":
                 control_flow.set_start_block(block)
